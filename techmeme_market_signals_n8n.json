@@ -1,0 +1,289 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                5
+              ],
+              "triggerAtHour": 17,
+              "triggerAtMinute": 45
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -368,
+        -64
+      ],
+      "id": "8b874201-bf3b-4600-89d2-de04e02c4ea4",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "REDACTED_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Techmeme Market Signals",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/REDACTED_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1688044986,
+          "mode": "list",
+          "cachedResultName": "Sheet3",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/REDACTED_SHEET_ID/edit#gid=1688044986"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -176,
+        -64
+      ],
+      "id": "b5e303ed-5674-4955-b3f5-3744d595ca6b",
+      "name": "Get row(s) in sheet"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze these tech market signals for investment decisions. Your goal is to help the user beat market benchmarks in a 1-2 year timeframe.  Data from the past week:\n\n{{ JSON.stringify($json, null, 2) }}\n\nProvide actionable investment analysis in this structure:\n\n**BUY SIGNALS:**\n- Which companies showed strongest positive momentum?\n- What sectors are accelerating?\n- Best risk/reward opportunities with specific reasoning\n\n**SELL/AVOID SIGNALS:**\n- Which companies showed concerning developments?\n- Regulatory risks or competitive threats\n- Overvalued or declining sectors\n\n**CRYPTO IMPLICATIONS:**\n- How do these signals affect crypto/blockchain markets?\n- AI + crypto intersection opportunities\n\n**TOP STOCK RECOMMENDATIONS:**\n- 3 strongest BUY candidates with tickers and reasoning\n- 3 AVOID/SELL candidates with tickers and reasoning\n- Position sizing: high/medium/low conviction\n- also suggest unusual, surprising, second-order effects companies to look into for stock buy\n\n\n**MARKET SUMMARY:**\n- Overall market sentiment shift\n- Signal quality score (1-10)\n- Risk level assessment\n\nFocus on actionable trading insights based on the signal patterns.\n\n\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        192,
+        -64
+      ],
+      "id": "19b031fa-ca5d-41e2-a053-7a2badde73c1",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "deepseek/deepseek-chat-v3.1",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        192,
+        112
+      ],
+      "id": "a24dc365-e000-46fa-82cb-be0463904b42",
+      "name": "OpenRouter Chat Model"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Aggregate all signals into one summary for analysis\nconst allSignals = $input.all();\n\n// Create a summary of the week's signals\nconst summary = {\n  total_signals: allSignals.length,\n  date_range: {\n    start: allSignals[0]?.json?.date || 'Unknown',\n    end: allSignals[allSignals.length - 1]?.json?.date || 'Unknown'\n  },\n  signals_by_category: {},\n  signals_by_sentiment: {},\n  high_value_signals: [],\n  all_signals: allSignals.map(item => item.json)\n};\n\n// Group by category and sentiment\nallSignals.forEach(item => {\n  const signal = item.json;\n  \n  // Count by category\n  summary.signals_by_category[signal.category] = (summary.signals_by_category[signal.category] || 0) + 1;\n  \n  // Count by sentiment\n  summary.signals_by_sentiment[signal.sentiment] = (summary.signals_by_sentiment[signal.sentiment] || 0) + 1;\n  \n  // Collect high-value signals\n  if (signal.signal_strength === 'High') {\n    summary.high_value_signals.push(signal);\n  }\n});\n\n// Return single aggregated object for AI analysis\nreturn summary;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        -64
+      ],
+      "id": "c24837c1-ba2a-432e-a0d7-fbf0f9660368",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "REDACTED_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Techmeme Market Signals",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/REDACTED_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1350069206,
+          "mode": "list",
+          "cachedResultName": "WeeklyReports",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/REDACTED_SHEET_ID/edit#gid=1350069206"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "date": "={{ $json.date }}",
+            "action": "={{ $json.action }}",
+            "ticker": "={{ $json.ticker }}",
+            "conviction": "={{ $json.conviction }}",
+            "reasoning": "={{ $json.reasoning }}",
+            "signal_quality": "={{ $json.signal_quality }}",
+            "overall_sentiment": "={{ $json.overall_sentiment }}"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        656,
+        -64
+      ],
+      "id": "0765212b-35db-4efc-b8ef-be54a5d09c04",
+      "name": "Append row"
+    },
+    {
+      "parameters": {
+        "sendTo": "REDACTED_EMAIL",
+        "subject": "=Techmeme Signals and AI recommendations as of {{ $now.format('yyyy-MM-dd') }}",
+        "message": "={{ $json.html_content }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        656,
+        -208
+      ],
+      "id": "bdffe981-b6ec-40ea-ba4a-141406738405",
+      "name": "Send a message"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Simple, fast parsing to prevent timeouts - handles both Claude and DeepSeek formats\nconst data = $input.first();\nconst currentDate = new Date().toISOString().split('T')[0];\n\nlet analysisText = '';\nlet recommendations = [];\nlet debugInfo = [];\n\ntry {\n  if (data.json && data.json.output) {\n    analysisText = data.json.output;\n  } else {\n    analysisText = data.output || data.text || '';\n  }\n\n  const lines = analysisText.split('\\n');\n  let inBuySection = false;\n  let inSellSection = false;\n\n  for (let i = 0; i < lines.length; i++) {\n    const line = lines[i];\n\n    if (line.includes('BUY:') || line.includes('**STRONG BUY') || line.includes('STRONG BUY') ||\n        line.includes('**BUY Candidates') || line.includes('BUY Candidates')) {\n      inBuySection = true; inSellSection = false; continue;\n    }\n    if (line.includes('SELL/AVOID:') || line.includes('**AVOID/SELL') || line.includes('AVOID/SELL') ||\n        line.includes('**SELL Candidates') || line.includes('SELL Candidates')) {\n      inBuySection = false; inSellSection = true; continue;\n    }\n    if (line.includes('## **MARKET SUMMARY') || line.includes('**MARKET SUMMARY**')) {\n      inBuySection = false; inSellSection = false; break;\n    }\n\n    if (inBuySection || inSellSection) {\n      const hasNumber = line.match(/^\\d+\\./);\n      const hasBullet = line.includes('**') && line.includes('(') && line.includes(')');\n\n      if (hasNumber || hasBullet) {\n        if (line.includes('**High Conviction:**') || line.includes('**Medium Conviction:**') ||\n            line.includes('**Avoid:**') || line.includes('%')) continue;\n\n        const tickerMatch = line.match(/\\*\\*([A-Z]{2,5})\\*\\*/) || line.match(/\\(([A-Z]{2,5})\\)/) || line.match(/([A-Z]{2,5})/);\n        if (tickerMatch) {\n          const ticker = tickerMatch[1];\n          let conviction = 'Medium Conviction';\n          if (line.includes('High')) conviction = 'High Conviction';\n          if (line.includes('Low')) conviction = 'Low Conviction';\n\n          let reasoning = 'Market analysis';\n          let reasoningParts = [];\n\n          for (let j = i + 1; j < Math.min(i + 8, lines.length); j++) {\n            const nextLine = lines[j].trim();\n            if (nextLine.startsWith('- ') || nextLine.startsWith('* ') ||\n                nextLine.startsWith('-') || nextLine.startsWith('*')) {\n              const bulletText = nextLine.replace(/^[-*]\\s*/, '').trim();\n              if (bulletText && !bulletText.startsWith('**')) reasoningParts.push(bulletText);\n            }\n            if (nextLine.match(/^\\d+\\./) || nextLine.includes('###') ||\n                (reasoningParts.length > 0 && nextLine === '')) break;\n          }\n\n          if (reasoningParts.length > 0) {\n            reasoning = reasoningParts.join('; ').substring(0, 200);\n          } else {\n            const reasoningMatch = line.match(/[-–]\\s*(.+)$/) || line.match(/:\\s*(.+)$/);\n            if (reasoningMatch) reasoning = reasoningMatch[1].trim();\n          }\n\n          recommendations.push({\n            date: currentDate,\n            action: inBuySection ? 'BUY' : 'SELL',\n            ticker: ticker,\n            conviction: conviction,\n            reasoning: reasoning,\n            signal_quality: 8,\n            overall_sentiment: 'Mixed to Positive'\n          });\n        }\n      }\n    }\n  }\n} catch (error) {\n  recommendations = [{ date: currentDate, action: 'ERROR', ticker: 'PARSE_ERROR', conviction: 'N/A', reasoning: error.message, signal_quality: 8, overall_sentiment: 'Unknown' }];\n}\n\nif (recommendations.length === 0) {\n  recommendations = [{ date: currentDate, action: 'NO_RECS', ticker: 'NONE', conviction: 'N/A', reasoning: 'No recommendations found', signal_quality: 8, overall_sentiment: 'Unknown' }];\n}\n\nreturn recommendations;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, -64],
+      "id": "032e850c-2864-46ef-8d08-fa7c7909df20",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.first();\nlet markdownText = '';\n\nif (typeof inputData === 'string') {\n  try {\n    const parsed = JSON.parse(inputData);\n    if (parsed.json && parsed.json.output) markdownText = parsed.json.output;\n  } catch (error) {\n    markdownText = inputData;\n  }\n} else if (inputData && typeof inputData === 'object') {\n  if (inputData.json && inputData.json.output) markdownText = inputData.json.output;\n  else if (inputData.output) markdownText = inputData.output;\n  else markdownText = JSON.stringify(inputData);\n}\n\nif (!markdownText || markdownText.length === 0) {\n  return { error: 'Could not extract text from input' };\n}\n\nlet htmlContent = markdownText\n  .replace(/\\*\\*([^*]+)\\*\\*/g, '<strong>$1</strong>')\n  .replace(/###?\\s*\\*\\*([^*]+)\\*\\*/g, '<h3>$1</h3>')\n  .replace(/##\\s*\\*\\*([^*]+)\\*\\*/g, '<h2>$1</h2>')\n  .replace(/\\n\\n/g, '|||PARAGRAPH|||')\n  .replace(/^[-*]\\s+(.+)$/gm, '<li>$1</li>')\n  .replace(/^(\\d+)\\.\\s+(.+)$/gm, '<li>$2</li>')\n  .replace(/(<li>.*?<\\/li>\\n?)+/gs, '<ul>$&</ul>')\n  .replace(/\\n/g, '<br>')\n  .replace(/\\|\\|\\|PARAGRAPH\\|\\|\\|/g, '</p><p>');\n\nhtmlContent = htmlContent\n  .replace(/<ul>(<li>.*?<\\/li>)<br>/gs, '<ul>$1')\n  .replace(/<\\/li><br><li>/gs, '</li><li>')\n  .replace(/<\\/ul><br><ul>/gs, '</ul><ul>');\n\nif (!htmlContent.startsWith('<p>') && !htmlContent.startsWith('<h')) {\n  htmlContent = '<p>' + htmlContent + '</p>';\n}\n\nreturn { html_content: htmlContent, success: true };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [464, -208],
+      "id": "a55d53ac-0e93-4ee9-a4d8-def5416cfea8",
+      "name": "Convert to HTML"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "value": "REDACTED_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Techmeme Market Signals",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/REDACTED_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1688044986,
+          "mode": "list",
+          "cachedResultName": "Sheet3",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/REDACTED_SHEET_ID/edit#gid=1688044986"
+        },
+        "numberToDelete": 400
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        864,
+        -208
+      ],
+      "id": "6fefd562-5631-4fa1-ba6d-12843d787d6f",
+      "name": "Delete rows or columns from sheet"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Convert to HTML",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Append row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to HTML": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Delete rows or columns from sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}
