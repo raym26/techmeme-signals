@@ -7,3 +7,4 @@ __pycache__/
 !techmeme_market_signals_n8n.json
 .idea/
 temp.txt
+logs/

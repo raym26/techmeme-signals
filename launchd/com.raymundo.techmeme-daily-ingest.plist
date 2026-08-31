@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.raymundo.techmeme-daily-ingest</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/raymundozialcita/techmeme-signals/scripts/run_pipeline.sh</string>
+        <string>from ingest_pipeline import run; run()</string>
+    </array>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>21</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+    <key>WorkingDirectory</key>
+    <string>/Users/raymundozialcita/techmeme-signals</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/raymundozialcita/techmeme-signals/logs/daily-ingest.err</string>
+    <key>StandardOutPath</key>
+    <string>/Users/raymundozialcita/techmeme-signals/logs/daily-ingest.out</string>
+    <key>RunAtLoad</key>
+    <false/>
+    <key>WakeFromSleep</key>
+    <true/>
+</dict>
+</plist>
