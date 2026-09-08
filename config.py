@@ -14,7 +14,19 @@ def _require(name: str) -> str:
 
 ANTHROPIC_API_KEY = _require("ANTHROPIC_API_KEY")
 
-GOOGLE_SERVICE_ACCOUNT_FILE = _require("GOOGLE_SERVICE_ACCOUNT_FILE")
+# Default to the copy that ships next to the code, so relocating the repo never
+# strands this path. An absolute GOOGLE_SERVICE_ACCOUNT_FILE in .env still wins
+# if set. (A stale absolute path in .env pointing into the old repo location is
+# exactly what silently broke both jobs after the Aug 2026 move out of ~/Documents.)
+_default_service_account = os.path.join(os.path.dirname(__file__), "service-account.json")
+GOOGLE_SERVICE_ACCOUNT_FILE = os.environ.get(
+    "GOOGLE_SERVICE_ACCOUNT_FILE", _default_service_account
+)
+if not os.path.isfile(GOOGLE_SERVICE_ACCOUNT_FILE):
+    raise RuntimeError(
+        f"Service account file not found: {GOOGLE_SERVICE_ACCOUNT_FILE} "
+        "(set GOOGLE_SERVICE_ACCOUNT_FILE in .env or place service-account.json beside the code)"
+    )
 GOOGLE_SHEET_ID = _require("GOOGLE_SHEET_ID")
 SIGNALS_SHEET_NAME = os.environ.get("SIGNALS_SHEET_NAME", "Sheet3")
 REPORTS_SHEET_NAME = os.environ.get("REPORTS_SHEET_NAME", "WeeklyReports")
