@@ -35,7 +35,7 @@ REPORTS_SHEET_NAME = os.environ.get("REPORTS_SHEET_NAME", "WeeklyReports")
 # ROLLING_WINDOW_DAYS are pruned after each weekly run, and only the most
 # recent CURRENT_WEEK_DAYS get sent to Claude in full detail (older signals
 # within the window are summarized as aggregate counts) to bound prompt size.
-ROLLING_WINDOW_DAYS = int(os.environ.get("ROLLING_WINDOW_DAYS", "28"))
+ROLLING_WINDOW_DAYS = int(os.environ.get("ROLLING_WINDOW_DAYS", "14"))
 CURRENT_WEEK_DAYS = int(os.environ.get("CURRENT_WEEK_DAYS", "7"))
 
 GMAIL_ADDRESS = _require("GMAIL_ADDRESS")
