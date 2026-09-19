@@ -6,6 +6,7 @@ import analyzer
 import config
 import emailer
 import html_report
+import market_data
 import recommendations
 import sheets_client
 
@@ -33,6 +34,9 @@ def run() -> None:
 
     logger.info("Requesting structured analysis from Claude")
     analysis = analyzer.analyze(summary)
+
+    logger.info("Fetching 52-week-high context for recommended tickers")
+    market_data.attach_pct_off_high(analysis.get("recommendations", []))
 
     logger.info("Building recommendation rows and email content")
     recs = recommendations.build_recommendation_rows(analysis)

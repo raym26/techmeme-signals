@@ -4,3 +4,4 @@ google-auth
 apscheduler
 python-dotenv
 markdown
+yfinance

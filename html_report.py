@@ -51,11 +51,14 @@ def _recommendations_table_html(recommendations: list[dict[str, Any]]) -> str:
     for rec in recommendations:
         action = rec.get("action", "")
         color = ACTION_COLORS.get(action, "#57606a")
+        pct_off_high = rec.get("pct_off_52wk_high")
+        pct_off_high_display = f"{pct_off_high:.1f}%" if pct_off_high is not None else "—"
         rows.append(
             f"""<tr>
   <td style="padding: 6px 10px; border-bottom: 1px solid #d0d7de; color: {color}; font-weight: 600;">{action}</td>
   <td style="padding: 6px 10px; border-bottom: 1px solid #d0d7de; font-weight: 600;">{rec.get("ticker", "")}</td>
   <td style="padding: 6px 10px; border-bottom: 1px solid #d0d7de;">{rec.get("conviction", "")}</td>
+  <td style="padding: 6px 10px; border-bottom: 1px solid #d0d7de;">{pct_off_high_display}</td>
   <td style="padding: 6px 10px; border-bottom: 1px solid #d0d7de;">{rec.get("reasoning", "")}</td>
 </tr>"""
         )
@@ -67,6 +70,7 @@ def _recommendations_table_html(recommendations: list[dict[str, Any]]) -> str:
       <th style="padding: 6px 10px;">Action</th>
       <th style="padding: 6px 10px;">Ticker</th>
       <th style="padding: 6px 10px;">Conviction</th>
+      <th style="padding: 6px 10px;">vs 52wk High</th>
       <th style="padding: 6px 10px;">Reasoning</th>
     </tr>
   </thead>
