@@ -22,15 +22,23 @@ python -c "from pipeline import run; run()"
 # extracts signals via Claude, appends to Sheet3, labels those emails processed)
 python -c "from ingest_pipeline import run; run()"
 
-# Start the long-running scheduler (daily ingest 21:00, weekly report Fri 17:45)
+# main.py (APScheduler, long-running foreground/background process) is NOT what's
+# actually deployed -- see "Scheduling" below. It's kept as a manual alternative,
+# e.g. for running both jobs continuously on a non-macOS box.
 python main.py
 ```
 
-`main.py` is meant to run continuously in a background terminal (tmux/screen) — there's no launchd/systemd unit, by design. Config lives in `.env` (see `.env.example`); `config.py` fails fast if a required var is missing.
+Config lives in `.env` (see `.env.example`); `config.py` fails fast if a required var is missing.
+
+## Scheduling
+
+Production scheduling is two launchd LaunchAgents, not `main.py`. `launchd/com.raymundo.techmeme-daily-ingest.plist` and `launchd/com.raymundo.techmeme-weekly-report.plist` are installed under `~/Library/LaunchAgents` and each fire `scripts/run_pipeline.sh` at the same times `main.py` uses (daily ingest 21:00, weekly report Fri 17:45) — check with `launchctl list | grep techmeme`. Each firing execs a fresh one-shot `python3 -c "..."` process (`scripts/run_pipeline.sh`), not a persistent daemon, so a code change takes effect on the next scheduled run automatically; there is nothing to "restart." `main.py`'s APScheduler loop duplicates this schedule but is not what's running — don't assume it's live without checking `launchctl list` first.
+
+`scripts/run_pipeline.sh` also polls (`.venv/bin/python3 -c "pass"`, up to 20x15s) before running: launchd fires right after a `pmset`-scheduled wake, and with FileVault on, the encrypted volume can still be settling then, raising `OSError: [Errno 11] Resource deadlock avoided` when the venv's site files are read before it's ready.
 
 ## Architecture
 
-Two independent pipelines share one Google Sheet (`GOOGLE_SHEET_ID`), scheduled together by `main.py` via APScheduler.
+Two independent pipelines share one Google Sheet (`GOOGLE_SHEET_ID`).
 
 **Daily ingest** (`ingest_pipeline.py`): `gmail_reader.py` (IMAP, authenticated with the same Gmail App Password used for outbound mail) pulls Techmeme digest emails not yet tagged `config.TECHMEME_PROCESSED_LABEL`, bounded to the last `config.ROLLING_WINDOW_DAYS` (via Gmail's `after:` search) → `extractor.py` (Claude Haiku 4.5, `output_config.format` JSON schema) turns the raw digest text into rows matching Sheet3's schema (`sheets_client.SIGNAL_COLUMNS`) → appended to Sheet3, emails labeled processed. It processes every unprocessed digest found within that window, oldest first, so a missed day catches up automatically in one run; older unprocessed digests are deliberately left alone (not labeled, not deleted) rather than backfilled, since they'd just be pruned from Sheet3 by the next weekly run anyway.
 
