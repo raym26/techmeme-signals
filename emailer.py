@@ -6,10 +6,10 @@ from email.mime.text import MIMEText
 import config
 
 
-def send_report(html_content: str) -> None:
+def send_report(html_content: str, subject: str | None = None) -> None:
     """Port of the "Send a message" (Gmail) node, using SMTP + an App Password."""
     message = MIMEMultipart("alternative")
-    message["Subject"] = f"Techmeme Signals and AI recommendations as of {date.today().isoformat()}"
+    message["Subject"] = subject or f"Techmeme Signals and AI recommendations as of {date.today().isoformat()}"
     message["From"] = config.GMAIL_ADDRESS
     message["To"] = config.RECIPIENT_EMAIL
     message.attach(MIMEText(html_content, "html"))

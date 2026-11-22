@@ -26,7 +26,13 @@ def run() -> None:
     signals = sheets_client.get_signal_rows()
 
     if not signals:
-        logger.info("No signals found; skipping run")
+        logger.warning("No signals found in %s; skipping run and sending warning", config.SIGNALS_SHEET_NAME)
+        emailer.send_report(
+            "<p>The weekly Techmeme report was <b>skipped</b> because the signals sheet is empty.</p>"
+            "<p>This usually means the daily ingest has stopped running (e.g. a hung job). "
+            "Check <code>logs/daily-ingest.err</code> and <code>launchctl list | grep techmeme</code>.</p>",
+            subject=f"WARNING: Techmeme weekly report skipped, no signals ({today.isoformat()})",
+        )
         return
 
     logger.info("Aggregating %d signals (tiered: current week + prior weeks)", len(signals))
