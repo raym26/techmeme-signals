@@ -74,12 +74,12 @@ SCHEMA = {
 
 
 def extract_signals(digest_text: str, digest_date: str) -> list[dict[str, Any]]:
-    """Calls Claude (Haiku 4.5) with structured outputs to turn a raw digest
+    """Calls Claude (Haiku 5.5) with structured outputs to turn a raw digest
     email body into rows matching Sheet3's schema."""
     client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
 
     response = client.messages.create(
-        model=config.CLAUDE_MODEL,
+        model=config.EXTRACTOR_MODEL,
         max_tokens=8192,
         system=SYSTEM_PROMPT,
         messages=[{"role": "user", "content": digest_text}],

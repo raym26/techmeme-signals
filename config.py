@@ -51,4 +51,5 @@ TECHMEME_SENDER = os.environ.get("TECHMEME_SENDER", "newsletter@techmeme.com")
 # the daily job runs -- relying on unread/read state would silently skip it.
 TECHMEME_PROCESSED_LABEL = os.environ.get("TECHMEME_PROCESSED_LABEL", "techmeme-processed")
 
-CLAUDE_MODEL = "claude-haiku-4-5"
+EXTRACTOR_MODEL = os.environ.get("EXTRACTOR_MODEL", "claude-haiku-5-5")
+ANALYZER_MODEL = os.environ.get("ANALYZER_MODEL", "claude-sonnet-5-5")

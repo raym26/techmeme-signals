@@ -86,14 +86,14 @@ SCHEMA = {
 
 
 def analyze(summary: dict[str, Any]) -> dict[str, Any]:
-    """Port of the "AI Agent" node, using Claude Haiku 4.5 with structured outputs
+    """Port of the "AI Agent" node, using Claude Sonnet 5.5 with structured outputs
     instead of freeform markdown + regex parsing (see recommendations.py)."""
     client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
 
     prompt = PROMPT_TEMPLATE.format(signals_json=json.dumps(summary, indent=2))
 
     response = client.messages.create(
-        model=config.CLAUDE_MODEL,
+        model=config.ANALYZER_MODEL,
         max_tokens=8000,
         messages=[{"role": "user", "content": prompt}],
         output_config={"format": {"type": "json_schema", "schema": SCHEMA}},
