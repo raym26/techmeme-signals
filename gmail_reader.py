@@ -122,7 +122,7 @@ def fetch_unprocessed_digests() -> list[DigestEmail]:
     from Sheet3 on the next weekly run anyway. Older unprocessed digests are
     left untouched in the inbox, not labeled or deleted.
     """
-    conn = imaplib.IMAP4_SSL(config.IMAP_HOST)
+    conn = imaplib.IMAP4_SSL(config.IMAP_HOST, timeout=60)
     try:
         conn.login(config.GMAIL_ADDRESS, config.GMAIL_APP_PASSWORD)
         conn.select("INBOX")
@@ -165,7 +165,7 @@ def fetch_unprocessed_digests() -> list[DigestEmail]:
 
 
 def mark_as_processed(uid: bytes) -> None:
-    conn = imaplib.IMAP4_SSL(config.IMAP_HOST)
+    conn = imaplib.IMAP4_SSL(config.IMAP_HOST, timeout=60)
     try:
         conn.login(config.GMAIL_ADDRESS, config.GMAIL_APP_PASSWORD)
         conn.select("INBOX")
